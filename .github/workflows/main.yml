@@ -1,0 +1,44 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}-latest
+    strategy:
+      matrix:
+        os: [ubuntu, windows, macos]
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v1
+    - name: Install Qt (ubuntu and macos)
+      uses: jurplel/install-qt-action@v2
+      if: matrix.os != 'windows'
+    - name: Install Qt (windows)
+      uses: jurplel/install-qt-action@v2
+      with:
+        arch: win64_mingw73
+      if: matrix.os == 'windows'
+    - name: Build
+      run: |
+        qmake
+        make
+        make clean
+    - name: Upload artifact (ubuntu)
+      uses: actions/upload-artifact@v1
+      with:
+        name: qalc-${{ matrix.os }}
+        path: qalc
+      if: matrix.os == 'ubuntu'
+    - name: Upload artifact (macos)
+      uses: actions/upload-artifact@v1
+      with:
+        name: qalc-${{ matrix.os }}
+        path: qalc.app
+      if: matrix.os == 'macos'
+    - name: Upload artifact (windows)
+      uses: actions/upload-artifact@v1
+      with:
+        name: qalc-${{ matrix.os }}
+        path: release/qalc.exe
+      if: matrix.os == 'windows'
