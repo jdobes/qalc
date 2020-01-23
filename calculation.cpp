@@ -159,7 +159,7 @@ void Calculation::addInputNumber(double num)
     }
 }
 
-void Calculation::preProcessChars(QVector<QString> *preProcessed, bool *ok)
+void Calculation::processChars(QVector<Token> *tokens, bool *ok)
 {
     QString numBuff = "";
     Calculation::Char c;
@@ -169,17 +169,64 @@ void Calculation::preProcessChars(QVector<QString> *preProcessed, bool *ok)
             numBuff += getCharString(c);
         }
         else {
+            // flush number to token
             if (numBuff != "") {
                 double num = numBuff.toDouble(ok);
                 if (!*ok) {
                     return;
                 }
-                preProcessed->append(numBuff);
+                Token t;
+                t.type = TokenType::NUMBER;
+                t.numberValue = num;
+                tokens->append(t);
                 numBuff = "";
             }
-            // ignore termination character
-            if (c != Calculation::Char::B_RESULT) {
-                preProcessed->append(getCharString(c));
+            // ignoring termination character
+            if (c == Calculation::Char::B_PLUS) {
+                Token t;
+                t.type = TokenType::OPERATOR;
+                t.opType = OperatorType::PLUS;
+                tokens->append(t);
+            }
+            else if (c == Calculation::Char::B_MINUS) {
+                Token t;
+                t.type = TokenType::OPERATOR;
+                t.opType = OperatorType::MINUS;
+                tokens->append(t);
+            }
+            else if (c == Calculation::Char::B_MUL) {
+                Token t;
+                t.type = TokenType::OPERATOR;
+                t.opType = OperatorType::MUL;
+                tokens->append(t);
+            }
+            else if (c == Calculation::Char::B_DIV) {
+                Token t;
+                t.type = TokenType::OPERATOR;
+                t.opType = OperatorType::DIV;
+                tokens->append(t);
+            }
+            else if (c == Calculation::Char::B_POW) {
+                Token t;
+                t.type = TokenType::OPERATOR;
+                t.opType = OperatorType::POW;
+                tokens->append(t);
+            }
+            else if (c == Calculation::Char::B_SQRT) {
+                Token t;
+                t.type = TokenType::OPERATOR;
+                t.opType = OperatorType::SQRT;
+                tokens->append(t);
+            }
+            else if (c == Calculation::Char::B_LEFT_BRACKET) {
+                Token t;
+                t.type = TokenType::LEFT_BRACKET;
+                tokens->append(t);
+            }
+            else if (c == Calculation::Char::B_RIGHT_BRACKET) {
+                Token t;
+                t.type = TokenType::RIGHT_BRACKET;
+                tokens->append(t);
             }
         }
     }
@@ -192,20 +239,48 @@ void Calculation::evaluate()
         return;
     }
 
-    QTextStream out(stdout); //debug
-
     // add termination character
     addInputChar(Calculation::Char::B_RESULT);
 
     bool ok = true;
-    QVector<QString> preProcessed;
+    QVector<Token> tokens;
 
-    // covert button presses to numbers and operations
-    this->preProcessChars(&preProcessed, &ok);
+    // covert button chars to numbers and operations
+    this->processChars(&tokens, &ok);
 
     // debug
-    for (int i = 0; i < preProcessed.count(); i++) {
-        out << i << ": " << preProcessed.at(i) << endl;
+    QTextStream out(stdout);
+    for (int i = 0; i < tokens.count(); i++) {
+        Token t = tokens.at(i);
+        if (t.type == TokenType::NUMBER) {
+            out << t.numberValue << endl;
+        }
+        else if (t.type == TokenType::OPERATOR) {
+            if (t.opType == OperatorType::PLUS) {
+                out << "+" << endl;
+            }
+            else if (t.opType == OperatorType::MINUS) {
+                out << "-" << endl;
+            }
+            else if (t.opType == OperatorType::MUL) {
+                out << "*" << endl;
+            }
+            else if (t.opType == OperatorType::DIV) {
+                out << "/" << endl;
+            }
+            else if (t.opType == OperatorType::POW) {
+                out << "POW" << endl;
+            }
+            else if (t.opType == OperatorType::SQRT) {
+                out << "SQRT" << endl;
+            }
+        }
+        else if (t.type == TokenType::LEFT_BRACKET) {
+            out << "(" << endl;
+        }
+        else if (t.type == TokenType::RIGHT_BRACKET) {
+            out << ")" << endl;
+        }
     }
 
     this->inputSequence->clear();

@@ -4,6 +4,28 @@
 #include <QObject>
 #include <QVector>
 
+enum class TokenType {
+    NUMBER,
+    OPERATOR,
+    LEFT_BRACKET,
+    RIGHT_BRACKET,
+};
+
+enum class OperatorType {
+    PLUS,
+    MINUS,
+    MUL,
+    DIV,
+    POW,
+    SQRT
+};
+
+struct Token {
+    TokenType type;
+    double numberValue;
+    OperatorType opType;
+};
+
 class Calculation
 {
 public:
@@ -33,6 +55,7 @@ public:
         B_RESULT,
         ERR
     };
+
     Calculation();
     QString getExpressionString() const;
     void addInputChar(const Calculation::Char c);
@@ -44,7 +67,7 @@ private:
     bool needReset;
     QString getCharString(const Calculation::Char c) const;
     bool isCharNumberRelated(const Calculation::Char c, int numBuffLength) const;
-    void preProcessChars(QVector<QString> *preProcessed, bool *ok);
+    void processChars(QVector<Token> *tokens, bool *ok);
     void addInputNumber(double num);
 };
 
