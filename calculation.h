@@ -29,6 +29,7 @@ struct Token {
     TokenType type;
     double numberValue;
     OperatorType opType;
+    int opArguments;
     OperatorAssociativity opAssoc;
     int opPrecedence;
     QVector<Token> opChildren;
@@ -77,8 +78,9 @@ private:
     bool isCharNumberRelated(const Calculation::Char c, int numBuffLength) const;
     void processChars(QVector<Token> *tokens, bool *ok);
     void tokensToPostfix(QVector<Token> *tokens);
-    void buildTreeStructure(QVector<Token> *tokens, Token token, bool *ok);
+    Token* buildTreeStructure(QVector<Token> *tokens, Token *token, bool *ok);
     void addInputNumber(double num);
+    double evaluateToken(Token token);
 };
 
 #endif // CALCULATION_H
