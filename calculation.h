@@ -20,10 +20,18 @@ enum class OperatorType {
     SQRT
 };
 
+enum class OperatorAssociativity {
+    LEFT,
+    RIGHT
+};
+
 struct Token {
     TokenType type;
     double numberValue;
     OperatorType opType;
+    OperatorAssociativity opAssoc;
+    int opPrecedence;
+    QVector<Token> opChildren;
 };
 
 class Calculation
@@ -68,6 +76,8 @@ private:
     QString getCharString(const Calculation::Char c) const;
     bool isCharNumberRelated(const Calculation::Char c, int numBuffLength) const;
     void processChars(QVector<Token> *tokens, bool *ok);
+    void tokensToPostfix(QVector<Token> *tokens);
+    void buildTreeStructure(QVector<Token> *tokens, Token token, bool *ok);
     void addInputNumber(double num);
 };
 
