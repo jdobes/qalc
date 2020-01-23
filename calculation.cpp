@@ -84,7 +84,9 @@ void Calculation::addToken(const Calculation::Token token)
 
 void Calculation::deleteLast()
 {
-    this->input->removeLast();
+    if (this->input->count() > 0) {
+        this->input->removeLast();
+    }
 }
 
 void Calculation::deleteAll()
