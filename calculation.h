@@ -35,7 +35,7 @@ public:
     };
     Calculation();
     QString getExpressionString() const;
-    void addChar(const Calculation::Char c);
+    void addInputChar(const Calculation::Char c);
     void deleteLast();
     void deleteAll();
     void evaluate();
@@ -45,6 +45,7 @@ private:
     QString getCharString(const Calculation::Char c) const;
     bool isCharNumberRelated(const Calculation::Char c, int numBuffLength) const;
     void preProcessChars(QVector<QString> *preProcessed, bool *ok);
+    void addInputNumber(double num);
 };
 
 #endif // CALCULATION_H

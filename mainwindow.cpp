@@ -28,7 +28,7 @@ void MainWindow::buttonClicked(const Calculation::Char c)
             this->calculation.evaluate();
             break;
         default:
-            this->calculation.addChar(c);
+            this->calculation.addInputChar(c);
             break;
     }
     this->ui->lineEdit->setText(this->calculation.getExpressionString());

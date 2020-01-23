@@ -90,7 +90,7 @@ QString Calculation::getExpressionString() const
     return output;
 }
 
-void Calculation::addChar(const Calculation::Char c)
+void Calculation::addInputChar(const Calculation::Char c)
 {
     if (!this->needReset) {
         this->inputSequence->append(c);
@@ -111,6 +111,52 @@ void Calculation::deleteAll()
 {
     this->inputSequence->clear();
     this->needReset = false;
+}
+
+void Calculation::addInputNumber(double num)
+{
+    QString numStr = QString::number(num, 'f', 9).remove(QRegExp("\\.?0+$"));
+
+    QChar c;
+    for (int i = 0; i < numStr.size(); i++) {
+        c = numStr.at(i);
+        if (c == QChar('-')) {
+            this->inputSequence->append(Calculation::Char::B_MINUS);
+        }
+        else if (c == QChar('0')) {
+            this->inputSequence->append(Calculation::Char::B_0);
+        }
+        else if (c == QChar('1')) {
+            this->inputSequence->append(Calculation::Char::B_1);
+        }
+        else if (c == QChar('2')) {
+            this->inputSequence->append(Calculation::Char::B_2);
+        }
+        else if (c == QChar('3')) {
+            this->inputSequence->append(Calculation::Char::B_3);
+        }
+        else if (c == QChar('4')) {
+            this->inputSequence->append(Calculation::Char::B_4);
+        }
+        else if (c == QChar('5')) {
+            this->inputSequence->append(Calculation::Char::B_5);
+        }
+        else if (c == QChar('6')) {
+            this->inputSequence->append(Calculation::Char::B_6);
+        }
+        else if (c == QChar('7')) {
+            this->inputSequence->append(Calculation::Char::B_7);
+        }
+        else if (c == QChar('8')) {
+            this->inputSequence->append(Calculation::Char::B_8);
+        }
+        else if (c == QChar('9')) {
+            this->inputSequence->append(Calculation::Char::B_9);
+        }
+        else if (c == QChar('.')) {
+            this->inputSequence->append(Calculation::Char::B_COMMA);
+        }
+    }
 }
 
 void Calculation::preProcessChars(QVector<QString> *preProcessed, bool *ok)
@@ -149,7 +195,7 @@ void Calculation::evaluate()
     QTextStream out(stdout); //debug
 
     // add termination character
-    addChar(Calculation::Char::B_RESULT);
+    addInputChar(Calculation::Char::B_RESULT);
 
     bool ok = true;
     QVector<QString> preProcessed;
@@ -167,5 +213,9 @@ void Calculation::evaluate()
     if (!ok) {
         this->inputSequence->append(Calculation::Char::ERR);
         this->needReset = true;
+    }
+    else {
+        double x = -12000.001200000;
+        this->addInputNumber(x);
     }
 }
