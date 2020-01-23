@@ -30,15 +30,20 @@ public:
         B_RIGHT_BRACKET,
         B_POW,
         B_SQRT,
-        B_RESULT
+        B_RESULT,
+        ERR
     };
     Calculation();
     QString getExpressionString() const;
     void addToken(const Calculation::Token token);
     void deleteLast();
     void deleteAll();
+    void evaluate();
 private:
     QVector<Calculation::Token> *input;
+    bool needReset;
+    QString getTokenString(const Calculation::Token token) const;
+    bool isNumberToken(const Calculation::Token token, int numBuffLength) const;
 };
 
 #endif // CALCULATION_H

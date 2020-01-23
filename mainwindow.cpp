@@ -25,6 +25,7 @@ void MainWindow::buttonClicked(const Calculation::Token token)
             this->calculation.deleteAll();
             break;
         case Calculation::Token::B_RESULT:
+            this->calculation.evaluate();
             break;
         default:
             this->calculation.addToken(token);

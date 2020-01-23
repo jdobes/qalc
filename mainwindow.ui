@@ -112,7 +112,7 @@
        <item row="3" column="1">
         <widget class="QPushButton" name="commaButton">
          <property name="text">
-          <string>,</string>
+          <string>.</string>
          </property>
         </widget>
        </item>
