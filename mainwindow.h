@@ -65,7 +65,7 @@ private slots:
     void on_resultButton_clicked();
 
 private:
-    void buttonClicked(const Calculation::Token token);
+    void buttonClicked(const Calculation::Char c);
     Ui::MainWindow *ui;
     Calculation calculation;
 };

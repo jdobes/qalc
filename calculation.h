@@ -7,7 +7,7 @@
 class Calculation
 {
 public:
-    enum class Token {
+    enum class Char {
         B_0,
         B_1,
         B_2,
@@ -35,15 +35,16 @@ public:
     };
     Calculation();
     QString getExpressionString() const;
-    void addToken(const Calculation::Token token);
+    void addChar(const Calculation::Char c);
     void deleteLast();
     void deleteAll();
     void evaluate();
 private:
-    QVector<Calculation::Token> *input;
+    QVector<Calculation::Char> *inputSequence;
     bool needReset;
-    QString getTokenString(const Calculation::Token token) const;
-    bool isNumberToken(const Calculation::Token token, int numBuffLength) const;
+    QString getCharString(const Calculation::Char c) const;
+    bool isCharNumberRelated(const Calculation::Char c, int numBuffLength) const;
+    void preProcessChars(QVector<QString> *preProcessed, bool *ok);
 };
 
 #endif // CALCULATION_H

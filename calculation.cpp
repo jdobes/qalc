@@ -4,77 +4,77 @@
 
 Calculation::Calculation()
 {
-    this->input = new QVector<Calculation::Token>;
+    this->inputSequence = new QVector<Calculation::Char>;
     this->needReset = false;
 }
 
-QString Calculation::getTokenString(const Calculation::Token token) const
+QString Calculation::getCharString(const Calculation::Char c) const
 {
-    switch (token) {
-        case Calculation::Token::B_0:
+    switch (c) {
+        case Calculation::Char::B_0:
             return "0";
-        case Calculation::Token::B_1:
+        case Calculation::Char::B_1:
             return "1";
-        case Calculation::Token::B_2:
+        case Calculation::Char::B_2:
             return "2";
-        case Calculation::Token::B_3:
+        case Calculation::Char::B_3:
             return "3";
-        case Calculation::Token::B_4:
+        case Calculation::Char::B_4:
             return "4";
-        case Calculation::Token::B_5:
+        case Calculation::Char::B_5:
             return "5";
-        case Calculation::Token::B_6:
+        case Calculation::Char::B_6:
             return "6";
-        case Calculation::Token::B_7:
+        case Calculation::Char::B_7:
             return "7";
-        case Calculation::Token::B_8:
+        case Calculation::Char::B_8:
             return "8";
-        case Calculation::Token::B_9:
+        case Calculation::Char::B_9:
             return "9";
-        case Calculation::Token::B_COMMA:
+        case Calculation::Char::B_COMMA:
             return ".";
-        case Calculation::Token::B_PERCENT:
+        case Calculation::Char::B_PERCENT:
             return "%";
-        case Calculation::Token::B_PLUS:
-            return " + ";
-        case Calculation::Token::B_MINUS:
-            return " - ";
-        case Calculation::Token::B_MUL:
-            return " × ";
-        case Calculation::Token::B_DIV:
-            return " ÷ ";
-        case Calculation::Token::B_LEFT_BRACKET:
+        case Calculation::Char::B_PLUS:
+            return "+";
+        case Calculation::Char::B_MINUS:
+            return "-";
+        case Calculation::Char::B_MUL:
+            return "×";
+        case Calculation::Char::B_DIV:
+            return "÷";
+        case Calculation::Char::B_LEFT_BRACKET:
             return "(";
-        case Calculation::Token::B_RIGHT_BRACKET:
+        case Calculation::Char::B_RIGHT_BRACKET:
             return ")";
-        case Calculation::Token::B_POW:
+        case Calculation::Char::B_POW:
             return "²";
-        case Calculation::Token::B_SQRT:
+        case Calculation::Char::B_SQRT:
             return "√";
-        case Calculation::Token::ERR:
+        case Calculation::Char::ERR:
             return "ERROR";
         default:
             return "";
     }
 }
 
-bool Calculation::isNumberToken(const Calculation::Token token, int numBuffLength) const
+bool Calculation::isCharNumberRelated(const Calculation::Char c, int numBuffLength) const
 {
-    switch (token) {
-        case Calculation::Token::B_0:
-        case Calculation::Token::B_1:
-        case Calculation::Token::B_2:
-        case Calculation::Token::B_3:
-        case Calculation::Token::B_4:
-        case Calculation::Token::B_5:
-        case Calculation::Token::B_6:
-        case Calculation::Token::B_7:
-        case Calculation::Token::B_8:
-        case Calculation::Token::B_9:
-        case Calculation::Token::B_COMMA:
+    switch (c) {
+        case Calculation::Char::B_0:
+        case Calculation::Char::B_1:
+        case Calculation::Char::B_2:
+        case Calculation::Char::B_3:
+        case Calculation::Char::B_4:
+        case Calculation::Char::B_5:
+        case Calculation::Char::B_6:
+        case Calculation::Char::B_7:
+        case Calculation::Char::B_8:
+        case Calculation::Char::B_9:
+        case Calculation::Char::B_COMMA:
             return true;
-        case Calculation::Token::B_PLUS:
-        case Calculation::Token::B_MINUS:
+        case Calculation::Char::B_PLUS:
+        case Calculation::Char::B_MINUS:
             return (numBuffLength == 0);
         default:
             return false;
@@ -84,33 +84,59 @@ bool Calculation::isNumberToken(const Calculation::Token token, int numBuffLengt
 QString Calculation::getExpressionString() const
 {
     QString output = "";
-    for (int i = 0; i < this->input->count(); i++) {
-        output += this->getTokenString(this->input->at(i));
+    for (int i = 0; i < this->inputSequence->count(); i++) {
+        output += this->getCharString(this->inputSequence->at(i));
     }
     return output;
 }
 
-void Calculation::addToken(const Calculation::Token token)
+void Calculation::addChar(const Calculation::Char c)
 {
     if (!this->needReset) {
-        this->input->append(token);
+        this->inputSequence->append(c);
     }
 }
 
 void Calculation::deleteLast()
 {
-    if (this->input->count() > 0) {
-        this->input->removeLast();
+    if (this->inputSequence->count() > 0) {
+        this->inputSequence->removeLast();
     }
-    if (this->input->count() == 0) {
+    if (this->inputSequence->count() == 0) {
         this->needReset = false;
     }
 }
 
 void Calculation::deleteAll()
 {
-    this->input->clear();
+    this->inputSequence->clear();
     this->needReset = false;
+}
+
+void Calculation::preProcessChars(QVector<QString> *preProcessed, bool *ok)
+{
+    QString numBuff = "";
+    Calculation::Char c;
+    for (int i = 0; i < this->inputSequence->count(); i++) {
+        c = this->inputSequence->at(i);
+        if (isCharNumberRelated(c, numBuff.length())) {
+            numBuff += getCharString(c);
+        }
+        else {
+            if (numBuff != "") {
+                double num = numBuff.toDouble(ok);
+                if (!*ok) {
+                    return;
+                }
+                preProcessed->append(numBuff);
+                numBuff = "";
+            }
+            // ignore termination character
+            if (c != Calculation::Char::B_RESULT) {
+                preProcessed->append(getCharString(c));
+            }
+        }
+    }
 }
 
 void Calculation::evaluate()
@@ -122,48 +148,24 @@ void Calculation::evaluate()
 
     QTextStream out(stdout); //debug
 
-    // add termination token
-    addToken(Calculation::Token::B_RESULT);
+    // add termination character
+    addChar(Calculation::Char::B_RESULT);
 
     bool ok = true;
     QVector<QString> preProcessed;
-    QString numBuff = "";
-    Calculation::Token token;
-    for (int i = 0; i < this->input->count(); i++) {
-        token = this->input->at(i);
-        if (isNumberToken(token, numBuff.length())) {
-            numBuff += getTokenString(token);
-        }
-        else if ((token == Calculation::Token::B_RESULT) && (numBuff != "")) {
-            double num = numBuff.toDouble(&ok);
-            if (!ok) {
-                break;
-            }
-            preProcessed.append(numBuff);
-            numBuff = "";
-        }
-        else {
-            if (numBuff != "") {
-                double num = numBuff.toDouble(&ok);
-                if (!ok) {
-                    break;
-                }
-                preProcessed.append(numBuff);
-                numBuff = "";
-            }
-            preProcessed.append(getTokenString(token));
-        }
-    }
+
+    // covert button presses to numbers and operations
+    this->preProcessChars(&preProcessed, &ok);
 
     // debug
     for (int i = 0; i < preProcessed.count(); i++) {
         out << i << ": " << preProcessed.at(i) << endl;
     }
 
-    this->input->clear();
+    this->inputSequence->clear();
 
     if (!ok) {
-        this->input->append(Calculation::Token::ERR);
+        this->inputSequence->append(Calculation::Char::ERR);
         this->needReset = true;
     }
 }
