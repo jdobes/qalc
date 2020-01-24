@@ -131,9 +131,9 @@
         </widget>
        </item>
        <item row="3" column="2">
-        <widget class="QPushButton" name="percentButton">
+        <widget class="QPushButton" name="modButton">
          <property name="text">
-          <string>%</string>
+          <string>mod</string>
          </property>
         </widget>
        </item>

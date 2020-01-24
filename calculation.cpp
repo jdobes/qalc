@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include <QtMath>
 #include <QTextStream>
 #include <QStack>
@@ -35,8 +37,8 @@ QString Calculation::getCharString(const Calculation::Char c) const
             return "9";
         case Calculation::Char::B_COMMA:
             return ".";
-        case Calculation::Char::B_PERCENT:
-            return "%";
+        case Calculation::Char::B_MOD:
+            return " mod ";
         case Calculation::Char::B_PLUS:
             return "+";
         case Calculation::Char::B_MINUS:
@@ -227,6 +229,15 @@ void Calculation::processChars(QVector<Token> *tokens, bool *ok)
                 t.opPrecedence = 2;
                 tokens->append(t);
             }
+            else if (c == Calculation::Char::B_MOD) {
+                Token t;
+                t.type = TokenType::OPERATOR;
+                t.opArguments = 2;
+                t.opType = OperatorType::MOD;
+                t.opAssoc = OperatorAssociativity::LEFT;
+                t.opPrecedence = 2;
+                tokens->append(t);
+            }
             else if (c == Calculation::Char::B_POW) {
                 Token t;
                 t.type = TokenType::OPERATOR;
@@ -347,6 +358,9 @@ double Calculation::evaluateToken(Token token)
         }
         else if (token.opType == OperatorType::SQRT) {
             return qSqrt(results.at(0));
+        }
+        else if (token.opType == OperatorType::MOD) {
+            return fmod(results.at(1), results.at(0));
         }
     }
     return 0;

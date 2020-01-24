@@ -89,11 +89,6 @@ void MainWindow::on_commaButton_clicked()
     this->buttonClicked(Calculation::Char::B_COMMA);
 }
 
-void MainWindow::on_percentButton_clicked()
-{
-    this->buttonClicked(Calculation::Char::B_PERCENT);
-}
-
 void MainWindow::on_plusButton_clicked()
 {
     this->buttonClicked(Calculation::Char::B_PLUS);
@@ -147,4 +142,9 @@ void MainWindow::on_sqrtButton_clicked()
 void MainWindow::on_resultButton_clicked()
 {
     this->buttonClicked(Calculation::Char::B_RESULT);
+}
+
+void MainWindow::on_modButton_clicked()
+{
+    this->buttonClicked(Calculation::Char::B_MOD);
 }

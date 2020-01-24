@@ -17,7 +17,8 @@ enum class OperatorType {
     MUL,
     DIV,
     POW,
-    SQRT
+    SQRT,
+    MOD
 };
 
 enum class OperatorAssociativity {
@@ -50,11 +51,11 @@ public:
         B_8,
         B_9,
         B_COMMA,
-        B_PERCENT,
         B_PLUS,
         B_MINUS,
         B_MUL,
         B_DIV,
+        B_MOD,
         B_DEL,
         B_CLEAR,
         B_LEFT_BRACKET,

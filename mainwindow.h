@@ -40,8 +40,6 @@ private slots:
 
     void on_commaButton_clicked();
 
-    void on_percentButton_clicked();
-
     void on_plusButton_clicked();
 
     void on_minusButton_clicked();
@@ -63,6 +61,8 @@ private slots:
     void on_sqrtButton_clicked();
 
     void on_resultButton_clicked();
+
+    void on_modButton_clicked();
 
 private:
     void buttonClicked(const Calculation::Char c);
