@@ -75,7 +75,7 @@ private:
     QVector<Calculation::Char> *inputSequence;
     bool needReset;
     QString getCharString(const Calculation::Char c) const;
-    bool isCharNumberRelated(const Calculation::Char c, int numBuffLength) const;
+    bool isCharNumberRelated(const Calculation::Char c, QVector<Token> *tokens, int numBuffLength) const;
     void processChars(QVector<Token> *tokens, bool *ok);
     void tokensToPostfix(QVector<Token> *tokens);
     Token* buildTreeStructure(QVector<Token> *tokens, Token *token, bool *ok);
