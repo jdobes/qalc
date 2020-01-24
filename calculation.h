@@ -6,9 +6,7 @@
 
 enum class TokenType {
     NUMBER,
-    OPERATOR,
-    LEFT_BRACKET,
-    RIGHT_BRACKET,
+    OPERATOR
 };
 
 enum class OperatorType {
@@ -18,12 +16,9 @@ enum class OperatorType {
     DIV,
     POW,
     SQRT,
-    MOD
-};
-
-enum class OperatorAssociativity {
-    LEFT,
-    RIGHT
+    MOD,
+    LEFT_BRACKET,
+    RIGHT_BRACKET
 };
 
 struct Token {
@@ -31,7 +26,6 @@ struct Token {
     double numberValue;
     OperatorType opType;
     int opArguments;
-    OperatorAssociativity opAssoc;
     int opPrecedence;
     QVector<Token> opChildren;
 };
@@ -78,10 +72,10 @@ private:
     QString getCharString(const Calculation::Char c) const;
     bool isCharNumberRelated(const Calculation::Char c, QVector<Token> *tokens, int numBuffLength) const;
     void processChars(QVector<Token> *tokens, bool *ok);
-    void tokensToPostfix(QVector<Token> *tokens);
+    void tokensToPostfix(QVector<Token> *tokens, bool *ok);
     Token* buildTreeStructure(QVector<Token> *tokens, Token *token, bool *ok);
     void addInputNumber(double num);
-    double evaluateToken(Token token);
+    double evaluateToken(Token token, bool *ok);
 };
 
 #endif // CALCULATION_H

@@ -1,7 +1,6 @@
 #include <cmath>
 
 #include <QtMath>
-#include <QTextStream>
 #include <QStack>
 
 #include "calculation.h"
@@ -67,7 +66,7 @@ bool Calculation::isCharNumberRelated(const Calculation::Char c, QVector<Token> 
     bool canStartWithSign = true;
     if (!tokens->isEmpty()) {
         Token last = tokens->last();
-        if (last.type == TokenType::OPERATOR && last.opArguments == 1) {
+        if (last.type == TokenType::OPERATOR && (last.opArguments == 1 || last.opType == OperatorType::RIGHT_BRACKET)) {
             canStartWithSign = false;
         }
     }
@@ -198,7 +197,6 @@ void Calculation::processChars(QVector<Token> *tokens, bool *ok)
                 t.type = TokenType::OPERATOR;
                 t.opArguments = 2;
                 t.opType = OperatorType::PLUS;
-                t.opAssoc = OperatorAssociativity::LEFT;
                 t.opPrecedence = 1;
                 tokens->append(t);
             }
@@ -207,7 +205,6 @@ void Calculation::processChars(QVector<Token> *tokens, bool *ok)
                 t.type = TokenType::OPERATOR;
                 t.opArguments = 2;
                 t.opType = OperatorType::MINUS;
-                t.opAssoc = OperatorAssociativity::LEFT;
                 t.opPrecedence = 1;
                 tokens->append(t);
             }
@@ -216,7 +213,6 @@ void Calculation::processChars(QVector<Token> *tokens, bool *ok)
                 t.type = TokenType::OPERATOR;
                 t.opArguments = 2;
                 t.opType = OperatorType::MUL;
-                t.opAssoc = OperatorAssociativity::LEFT;
                 t.opPrecedence = 2;
                 tokens->append(t);
             }
@@ -225,7 +221,6 @@ void Calculation::processChars(QVector<Token> *tokens, bool *ok)
                 t.type = TokenType::OPERATOR;
                 t.opArguments = 2;
                 t.opType = OperatorType::DIV;
-                t.opAssoc = OperatorAssociativity::LEFT;
                 t.opPrecedence = 2;
                 tokens->append(t);
             }
@@ -234,7 +229,6 @@ void Calculation::processChars(QVector<Token> *tokens, bool *ok)
                 t.type = TokenType::OPERATOR;
                 t.opArguments = 2;
                 t.opType = OperatorType::MOD;
-                t.opAssoc = OperatorAssociativity::LEFT;
                 t.opPrecedence = 2;
                 tokens->append(t);
             }
@@ -243,7 +237,6 @@ void Calculation::processChars(QVector<Token> *tokens, bool *ok)
                 t.type = TokenType::OPERATOR;
                 t.opArguments = 1;
                 t.opType = OperatorType::POW;
-                t.opAssoc = OperatorAssociativity::LEFT;
                 t.opPrecedence = 3;
                 tokens->append(t);
             }
@@ -252,30 +245,34 @@ void Calculation::processChars(QVector<Token> *tokens, bool *ok)
                 t.type = TokenType::OPERATOR;
                 t.opArguments = 1;
                 t.opType = OperatorType::SQRT;
-                t.opAssoc = OperatorAssociativity::LEFT;
                 t.opPrecedence = 3;
                 tokens->append(t);
             }
             else if (c == Calculation::Char::B_LEFT_BRACKET) {
                 Token t;
-                t.type = TokenType::LEFT_BRACKET;
+                t.type = TokenType::OPERATOR;
+                t.opArguments = 0;
+                t.opType = OperatorType::LEFT_BRACKET;
+                t.opPrecedence = 0;
                 tokens->append(t);
             }
             else if (c == Calculation::Char::B_RIGHT_BRACKET) {
                 Token t;
-                t.type = TokenType::RIGHT_BRACKET;
+                t.type = TokenType::OPERATOR;
+                t.opArguments = 0;
+                t.opType = OperatorType::RIGHT_BRACKET;
+                t.opPrecedence = 0;
                 tokens->append(t);
             }
         }
     }
 }
 
-void Calculation::tokensToPostfix(QVector<Token> *tokens)
+void Calculation::tokensToPostfix(QVector<Token> *tokens, bool *ok)
 {
     QVector<Token> newTokens;
     QStack<Token> tmpOperatorStack;
     Token t;
-    QTextStream out(stdout);
     while(!tokens->isEmpty()) {
         t = tokens->at(0);
         tokens->removeAt(0);
@@ -283,14 +280,24 @@ void Calculation::tokensToPostfix(QVector<Token> *tokens)
             newTokens.append(t);
         }
         else if (t.type == TokenType::OPERATOR) {
-            while ((!tmpOperatorStack.isEmpty()) && (((t.opAssoc == OperatorAssociativity::LEFT) && (t.opPrecedence == tmpOperatorStack.last().opPrecedence)) ||
-                                                     t.opPrecedence < tmpOperatorStack.last().opPrecedence))
-            {
-                   newTokens.append(tmpOperatorStack.pop());
-                   out << "ADD TO OUT" << endl;
+            if (t.opType == OperatorType::LEFT_BRACKET) {
+                tmpOperatorStack.push(t);
             }
-            tmpOperatorStack.push(t);
-            out << "ADD TO STACK" << endl;
+            else if (t.opType == OperatorType::RIGHT_BRACKET && !tmpOperatorStack.isEmpty()) {
+                Token popped = tmpOperatorStack.pop();
+                while ((!tmpOperatorStack.isEmpty()) && (popped.opType != OperatorType::LEFT_BRACKET))
+                {
+                    newTokens.append(popped);
+                    popped = tmpOperatorStack.pop();
+                }
+            }
+            else {
+                while ((!tmpOperatorStack.isEmpty()) && (t.opPrecedence <= tmpOperatorStack.last().opPrecedence))
+                {
+                       newTokens.append(tmpOperatorStack.pop());
+                }
+                tmpOperatorStack.push(t);
+            }
         }
     }
     while(!tmpOperatorStack.isEmpty()) {
@@ -301,6 +308,10 @@ void Calculation::tokensToPostfix(QVector<Token> *tokens)
     for (int i = 0; i < newTokens.count(); i++) {
         t = newTokens.at(i);
         tokens->append(t);
+    }
+    // catch input like ()
+    if (tokens->isEmpty()) {
+        *ok = false;
     }
 }
 
@@ -325,21 +336,15 @@ Token* Calculation::buildTreeStructure(QVector<Token> *tokens, Token *token, boo
     return token;
 }
 
-double Calculation::evaluateToken(Token token)
+double Calculation::evaluateToken(Token token, bool *ok)
 {
     if (token.type == TokenType::NUMBER) {
-        QTextStream out(stdout);
-        out << "NUM: " << token.numberValue << endl;
-
         return token.numberValue;
     }
     else if (token.type == TokenType::OPERATOR) {
-        QTextStream out(stdout);
-        out << "OP: " << token.opChildren.count() << " childs" << endl;
-
         QVector<double> results;
         for (int i = 0; i < token.opChildren.count(); i++) {
-            results.append(this->evaluateToken(token.opChildren.at(i)));
+            results.append(this->evaluateToken(token.opChildren.at(i), ok));
         }
         if (token.opType == OperatorType::PLUS) {
             return results.at(1) + results.at(0);
@@ -351,6 +356,9 @@ double Calculation::evaluateToken(Token token)
             return results.at(1) * results.at(0);
         }
         else if (token.opType == OperatorType::DIV) {
+            if (results.at(0) == 0.0) { // div by zero
+                *ok = false;
+            }
             return results.at(1) / results.at(0);
         }
         else if (token.opType == OperatorType::POW) {
@@ -360,9 +368,13 @@ double Calculation::evaluateToken(Token token)
             return qSqrt(results.at(0));
         }
         else if (token.opType == OperatorType::MOD) {
+            if (results.at(0) == 0.0) { // div by zero
+                *ok = false;
+            }
             return fmod(results.at(1), results.at(0));
         }
     }
+    *ok = false;
     return 0;
 }
 
@@ -380,8 +392,6 @@ void Calculation::evaluate()
     QVector<Token> tokens;
 
     // convert button chars to numbers and operations
-    QTextStream out(stdout);
-
     this->processChars(&tokens, &ok);
     if (!ok) {
         this->inputSequence->clear();
@@ -390,65 +400,14 @@ void Calculation::evaluate()
         return;
     }
 
-    for (int i = 0; i < tokens.count(); i++) {
-        Token t = tokens.at(i);
-        if (t.type == TokenType::NUMBER) {
-            out << t.numberValue << endl;
-        }
-        if (t.type == TokenType::OPERATOR) {
-            if (t.opType == OperatorType::PLUS) {
-                out << "+" << endl;
-            }
-            if (t.opType == OperatorType::MINUS) {
-                out << "-" << endl;
-            }
-            if (t.opType == OperatorType::MUL) {
-                out << "*" << endl;
-            }
-            if (t.opType == OperatorType::DIV) {
-                out << "/" << endl;
-            }
-            if (t.opType == OperatorType::POW) {
-                out << "POW" << endl;
-            }
-            if (t.opType == OperatorType::SQRT) {
-                out << "SQRT" << endl;
-            }
-        }
-    }
-
-    out << "------------" << endl;
-
     // shunting yard algorithm
-    this->tokensToPostfix(&tokens);
-
-    for (int i = 0; i < tokens.count(); i++) {
-        Token t = tokens.at(i);
-        if (t.type == TokenType::NUMBER) {
-            out << t.numberValue << endl;
-        }
-        if (t.type == TokenType::OPERATOR) {
-            if (t.opType == OperatorType::PLUS) {
-                out << "+" << endl;
-            }
-            if (t.opType == OperatorType::MINUS) {
-                out << "-" << endl;
-            }
-            if (t.opType == OperatorType::MUL) {
-                out << "*" << endl;
-            }
-            if (t.opType == OperatorType::DIV) {
-                out << "/" << endl;
-            }
-            if (t.opType == OperatorType::POW) {
-                out << "POW" << endl;
-            }
-            if (t.opType == OperatorType::SQRT) {
-                out << "SQRT" << endl;
-            }
-        }
+    this->tokensToPostfix(&tokens, &ok);
+    if (!ok) {
+        this->inputSequence->clear();
+        this->inputSequence->append(Calculation::Char::ERR);
+        this->needReset = true;
+        return;
     }
-
 
     // create tree for evaluation
     Token lastToken = tokens.last();
@@ -461,6 +420,15 @@ void Calculation::evaluate()
         return;
     }
 
+    // go through tree and get result
+    double result = this->evaluateToken(*rootToken, &ok);
+    if (!ok) {
+        this->inputSequence->clear();
+        this->inputSequence->append(Calculation::Char::ERR);
+        this->needReset = true;
+        return;
+    }
+
     this->inputSequence->clear();
-    this->addInputNumber(this->evaluateToken(*rootToken));
+    this->addInputNumber(result);
 }
